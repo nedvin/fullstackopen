@@ -1,13 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Filter from "./components/Filter";
 import PersonForm from "./components/PersonForm";
 import Persons from "./components/Persons";
+import axios from "axios";
 
 const App = () => {
-  const [persons, setPersons] = useState([{ name: "Arto Hellas" }]);
+  const [persons, setPersons] = useState([]);
   const [newName, setNewName] = useState("");
   const [newPhoneNumber, setNewPhoneNumber] = useState("");
   const [nameFilter, setNameFilter] = useState("");
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:3001/persons")
+      .then((response) => setPersons(response.data));
+  }, []);
 
   const isPersonInPhoneBook = (name) =>
     persons.find((person) => person.name === name) !== undefined;
@@ -17,7 +24,13 @@ const App = () => {
     if (isPersonInPhoneBook(newName)) {
       alert(`${newName} is already in the phone book`);
     } else {
-      setPersons(persons.concat({ name: newName, number: newPhoneNumber }));
+      setPersons(
+        persons.concat({
+          name: newName,
+          number: newPhoneNumber,
+          id: persons.length + 1,
+        })
+      );
     }
   };
 
