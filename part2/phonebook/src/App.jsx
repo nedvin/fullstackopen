@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Filter from "./components/Filter";
 import PersonForm from "./components/PersonForm";
 import Persons from "./components/Persons";
+import Notification from "./components/Notification";
 import personService from "./services/persons";
 
 const App = () => {
@@ -9,6 +10,8 @@ const App = () => {
   const [newName, setNewName] = useState("");
   const [newPhoneNumber, setNewPhoneNumber] = useState("");
   const [nameFilter, setNameFilter] = useState("");
+  const [notificationMessage, setNotificationMessage] = useState(null);
+  const [isError, setIsError] = useState(false);
 
   useEffect(() => {
     personService.getAll().then((persons) => setPersons(persons));
@@ -41,20 +44,31 @@ const App = () => {
             setPersons((persons) =>
               persons.map((p) => (p.id !== person.id ? p : person))
             );
+            setNotificationMessage(`${existingPerson.name} was updated`);
+            setTimeout(() => {
+              setNotificationMessage(null);
+            }, 5000);
             clearNewPersonForm();
           })
           .catch((err) => {
             setPersons((persons) =>
               persons.filter((p) => p.id !== existingPerson.id)
             );
-            alert(
+            setNotificationMessage(
               `${existingPerson.name} is already deleted on the server. Number could not be changed`
             );
+            setIsError(true);
+            setTimeout(() => {
+              setNotificationMessage(null);
+              setIsError(false);
+            }, 5000);
           });
       }
     } else {
       personService.create(newPerson).then((person) => {
         setPersons((persons) => persons.concat(person));
+        setNotificationMessage(`${newPerson.name} was added to the phonebook`);
+        setTimeout(() => setNotificationMessage(null), 5000);
         clearNewPersonForm();
       });
     }
@@ -74,13 +88,19 @@ const App = () => {
         .then(() => setPersons((persons) => persons.filter((p) => p.id !== id)))
         .catch((err) => {
           setPersons((persons) => persons.filter((p) => p.id !== id));
-          alert(`${person.name} is already deleted`);
+          setIsError(true);
+          setNotificationMessage(`${person.name} is already deleted`);
+          setTimeout(() => {
+            setNotificationMessage(null);
+            setIsError(false);
+          }, 5000);
         });
     }
   };
 
   return (
     <div>
+      <Notification message={notificationMessage} isError={isError} />
       <h2>Phonebook</h2>
       <Filter value={nameFilter} onChange={handleFilterInput} />
       <h3>add new</h3>
