@@ -141,4 +141,30 @@ test("missing title when posting should result in bad request", async () => {
   expect(response.body).toHaveLength(6);
 });
 
+test("should be able to delete a blogpost", async () => {
+  const firstResponse = await api.get("/api/blogs");
+
+  await api.delete(`/api/blogs/${firstResponse.body[0].id}`);
+
+  const secondResponse = await api.get("/api/blogs");
+
+  expect(secondResponse.body).toHaveLength(firstResponse.body.length - 1);
+});
+
+test("should be able to update a blogpost", async () => {
+  const updatedBlog = initialBlogs[0];
+  updatedBlog.likes = 1337;
+  const response = await api
+    .put(`/api/blogs/${updatedBlog._id}`)
+    .send(updatedBlog);
+
+  expect(response.body.likes).toBe(1337);
+});
+
+test("should receive 400 when updating with invalid id", async () => {
+  const updatedBlog = initialBlogs[0];
+  updatedBlog.likes = 1337;
+  await api.put(`/api/blogs/wrongid`).send(updatedBlog).expect(400);
+});
+
 afterAll(async () => mongoose.connection.close());

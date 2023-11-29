@@ -15,12 +15,10 @@ blogsRouter.get("/", async (request, response) => {
 
 blogsRouter.post("/", async (request, response) => {
   if (!request.body.url) {
-    console.log("in first if");
     return response.status(400).end();
   }
 
   if (!request.body.title) {
-    console.log("in second if");
     return response.status(400).end();
   }
 
@@ -29,6 +27,24 @@ blogsRouter.post("/", async (request, response) => {
   const result = await blog.save();
 
   response.status(201).json(result);
+});
+
+blogsRouter.delete("/:id", async (request, response) => {
+  await Blog.findByIdAndDelete(request.params.id);
+  response.status(204).end();
+});
+
+blogsRouter.put("/:id", async (request, response) => {
+  try {
+    const updatedBlog = await Blog.findByIdAndUpdate(
+      request.params.id,
+      request.body,
+      { new: true }
+    );
+    response.json(updatedBlog);
+  } catch (error) {
+    response.status(400).json({ error: "malformed id" });
+  }
 });
 
 module.exports = blogsRouter;
