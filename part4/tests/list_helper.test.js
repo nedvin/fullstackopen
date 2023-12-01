@@ -31,7 +31,7 @@ const blogPost4 = {
   title: "Cilantro with brussel sprouts",
   author: "Chef de Partie",
   url: "www.interestingcombinations.se",
-  likes: 5,
+  likes: 30,
   _id: "6565c528c3908c83d21e18a1",
   __v: 0,
 };
@@ -64,6 +64,28 @@ describe("favorite blog", () => {
       blogPost3
     );
   });
+});
+
+test("most blogs", () => {
+  const result = listHelper.mostBlogs([
+    blogPost1,
+    blogPost2,
+    blogPost3,
+    blogPost4,
+  ]);
+
+  expect(result).toEqual({ author: "Chef de Partie", blogs: 2 });
+});
+
+test("most likes", () => {
+  const result = listHelper.mostLikes([
+    blogPost1,
+    blogPost2,
+    blogPost3,
+    blogPost4,
+  ]);
+
+  expect(result).toEqual({ author: "Chef de Partie", likes: 35 });
 });
 
 test("dummy returns one", () => {
