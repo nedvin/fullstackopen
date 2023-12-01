@@ -1,11 +1,7 @@
-// require supertest
-// use beforeeach to initialize db (reset)
-// use afterall (or similiar name) to close connection to mongo
-
-// test to check that correct number of blogposts are returned in json format
 const mongoose = require("mongoose");
 const supertest = require("supertest");
 const app = require("../app");
+const User = require("../models/user");
 const Blog = require("../models/blog");
 
 const api = supertest(app);
@@ -61,110 +57,178 @@ const initialBlogs = [
   },
 ];
 
+const userInfo = {
+  username: "willy",
+  password: "qwerty",
+  name: "willy",
+};
+
+const getBearerToken = async (username, password) => {
+  const response = await api.post("/api/login").send({ username, password });
+  return response.body.token;
+};
+
+// clear db and create a new user and blogs. Uses the api instead of mongoose directly to get the passwordHash etc. in db
 beforeEach(async () => {
   await Blog.deleteMany({});
+  await User.deleteMany({});
+  const user = await api.post("/api/users").send(userInfo);
   const promises = initialBlogs
-    .map((blog) => new Blog(blog))
+    .map(
+      (blog) =>
+        new Blog({ ...blog, user: new mongoose.Types.ObjectId(user.body.id) })
+    )
     .map((blog) => blog.save());
   await Promise.all(promises);
 });
 
-test("get should return all blogs in json format", async () => {
-  const response = await api.get("/api/blogs");
-  expect(response.status).toBe(200);
-  expect(response.body).toHaveLength(6);
-  expect(response.headers["content-type"]).toMatch(/application\/json/);
-}, 100000);
+describe("when retrieving blogs", () => {
+  test("base path should return all blogs in json format", async () => {
+    const response = await api.get("/api/blogs");
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveLength(6);
+    expect(response.headers["content-type"]).toMatch(/application\/json/);
+  }, 100000);
 
-test("blogs should have an id", async () => {
-  const response = await api.get("/api/blogs");
-  const id = response.body[0].id;
-  expect(id).toBeDefined();
-}, 100000);
-
-test("blog should be successfully saved", async () => {
-  const newBlog = {
-    title: "Pearls, mushrooms and delicious kidney beans",
-    author: "Guy Incognito",
-    url: "http://www.incognitomode.com",
-    likes: 123,
-  };
-
-  await api.post("/api/blogs").send(newBlog);
-
-  const response = await api.get("/api/blogs");
-
-  expect(response.body).toHaveLength(initialBlogs.length + 1);
+  test("blogs should have an id", async () => {
+    const response = await api.get("/api/blogs");
+    const id = response.body[0].id;
+    expect(id).toBeDefined();
+  }, 100000);
 });
 
-test("likes should default to 0 if it doesn't exist", async () => {
-  const newBlog = {
-    title: "Pearls, mushrooms and delicious kidney beans",
-    author: "Guy Incognito",
-    url: "http://www.incognitomode.com",
-  };
+describe("when creating a blog", () => {
+  test("a lack of token should fail", async () => {
+    const newBlog = {
+      title: "Pearls, mushrooms and delicious kidney beans",
+      author: "Guy Incognito",
+      url: "http://www.incognitomode.com",
+      likes: 123,
+    };
 
-  await api.post("/api/blogs").send(newBlog);
-  const response = await api.get("/api/blogs");
-  const savedBlog = response.body.find(
-    (blog) => blog.author === "Guy Incognito"
-  );
+    await api.post("/api/blogs").send(newBlog).expect(401);
+  });
 
-  expect(savedBlog.likes).toBe(0);
+  test("blog should be successfully saved", async () => {
+    const token = await getBearerToken(userInfo.username, userInfo.password);
+
+    const newBlog = {
+      title: "Pearls, mushrooms and delicious kidney beans",
+      author: "Guy Incognito",
+      url: "http://www.incognitomode.com",
+      likes: 123,
+    };
+
+    await api
+      .post("/api/blogs")
+      .set("authorization", `Bearer ${token}`)
+      .send(newBlog);
+
+    const response = await api.get("/api/blogs");
+
+    expect(response.body).toHaveLength(initialBlogs.length + 1);
+  }, 100000);
+
+  test("likes should default to 0 if it doesn't exist", async () => {
+    const newBlog = {
+      title: "Pearls, mushrooms and delicious kidney beans",
+      author: "Guy Incognito",
+      url: "http://www.incognitomode.com",
+    };
+
+    const token = await getBearerToken(userInfo.username, userInfo.password);
+
+    await api
+      .post("/api/blogs")
+      .set("authorization", `Bearer ${token}`)
+      .send(newBlog);
+    const response = await api.get("/api/blogs");
+
+    const savedBlog = response.body.find(
+      (blog) => blog.author === "Guy Incognito"
+    );
+
+    expect(savedBlog.likes).toBe(0);
+  });
+
+  test("missing url when posting should result in bad request", async () => {
+    const newBlog = {
+      title: "Pearls, mushrooms and delicious kidney beans",
+      author: "Guy Incognito",
+      likes: 123,
+    };
+
+    const token = await getBearerToken(userInfo.username, userInfo.password);
+
+    await api
+      .post("/api/blogs")
+      .set("authorization", `Bearer ${token}`)
+      .send(newBlog)
+      .expect(400);
+
+    const response = await api.get("/api/blogs");
+
+    expect(response.body).toHaveLength(6);
+  });
+
+  test("missing title when posting should result in bad request", async () => {
+    const newBlog = {
+      url: "http://www.incognitomode.com",
+      author: "Guy Incognito",
+      likes: 123,
+    };
+
+    const token = await getBearerToken(userInfo.username, userInfo.password);
+
+    await api
+      .post("/api/blogs")
+      .set("authorization", `Bearer ${token}`)
+      .send(newBlog)
+      .expect(400);
+
+    const response = await api.get("/api/blogs");
+
+    expect(response.body).toHaveLength(6);
+  });
 });
 
-test("missing url when posting should result in bad request", async () => {
-  const newBlog = {
-    title: "Pearls, mushrooms and delicious kidney beans",
-    author: "Guy Incognito",
-    likes: 123,
-  };
+describe("when deleting a blog", () => {
+  test("it should be successful by id", async () => {
+    const firstResponse = await api.get("/api/blogs");
+    const token = await getBearerToken(userInfo.username, userInfo.password);
+    await api
+      .delete(`/api/blogs/${firstResponse.body[0].id}`)
+      .set("authorization", `Bearer ${token}`)
+      .expect(204);
 
-  await api.post("/api/blogs").send(newBlog).expect(400);
+    const secondResponse = await api.get("/api/blogs");
 
-  const response = await api.get("/api/blogs");
+    expect(secondResponse.body).toHaveLength(firstResponse.body.length - 1);
+  });
 
-  expect(response.body).toHaveLength(6);
+  test("it should fail without a token", async () => {
+    const blogs = await api.get("/api/blogs");
+
+    await api.delete(`/api/blogs/${blogs.body[0].id}`).expect(401);
+  });
 });
 
-test("missing title when posting should result in bad request", async () => {
-  const newBlog = {
-    url: "http://www.incognitomode.com",
-    author: "Guy Incognito",
-    likes: 123,
-  };
+describe("when updating a blog", () => {
+  test("should be able to update a blogpost", async () => {
+    const updatedBlog = initialBlogs[0];
+    updatedBlog.likes = 1337;
+    const response = await api
+      .put(`/api/blogs/${updatedBlog._id}`)
+      .send(updatedBlog);
 
-  await api.post("/api/blogs").send(newBlog).expect(400);
+    expect(response.body.likes).toBe(1337);
+  });
 
-  const response = await api.get("/api/blogs");
-
-  expect(response.body).toHaveLength(6);
-});
-
-test("should be able to delete a blogpost", async () => {
-  const firstResponse = await api.get("/api/blogs");
-
-  await api.delete(`/api/blogs/${firstResponse.body[0].id}`);
-
-  const secondResponse = await api.get("/api/blogs");
-
-  expect(secondResponse.body).toHaveLength(firstResponse.body.length - 1);
-});
-
-test("should be able to update a blogpost", async () => {
-  const updatedBlog = initialBlogs[0];
-  updatedBlog.likes = 1337;
-  const response = await api
-    .put(`/api/blogs/${updatedBlog._id}`)
-    .send(updatedBlog);
-
-  expect(response.body.likes).toBe(1337);
-});
-
-test("should receive 400 when updating with invalid id", async () => {
-  const updatedBlog = initialBlogs[0];
-  updatedBlog.likes = 1337;
-  await api.put(`/api/blogs/wrongid`).send(updatedBlog).expect(400);
+  test("should receive 400 when updating with invalid id", async () => {
+    const updatedBlog = initialBlogs[0];
+    updatedBlog.likes = 1337;
+    await api.put(`/api/blogs/wrongid`).send(updatedBlog).expect(400);
+  });
 });
 
 afterAll(async () => mongoose.connection.close());
