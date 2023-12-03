@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Blogs from "./components/Blogs";
 import User from "./components/User";
+import NewBlogForm from "./components/NewBlogForm";
 import blogService from "./services/blogs";
 import login from "./services/login";
 
@@ -19,7 +20,9 @@ const App = () => {
     if (user === null) {
       return;
     } else {
-      setUser(JSON.parse(user));
+      const newUser = JSON.parse(user);
+      setUser(newUser);
+      blogService.setToken(newUser.token);
     }
   }, []);
 
@@ -31,6 +34,7 @@ const App = () => {
         password,
       });
       setUser(user);
+      blogService.setToken(user.token);
       window.localStorage.setItem("blogsAppUser", JSON.stringify(user));
     } catch (error) {
       console.error(error);
@@ -41,6 +45,11 @@ const App = () => {
   const handleLogout = () => {
     setUser(null);
     window.localStorage.removeItem("blogsAppUser");
+  };
+
+  const handleBlogSubmit = async (data) => {
+    const response = await blogService.create(data);
+    setBlogs((blogs) => blogs.concat(response));
   };
 
   const loginForm = () => {
@@ -83,6 +92,7 @@ const App = () => {
         <>
           <h2>blogs</h2>
           <User user={user} handleLogout={handleLogout} />
+          <NewBlogForm onSubmit={handleBlogSubmit} />
           <Blogs user={user.name} blogs={blogs} />
         </>
       )}
