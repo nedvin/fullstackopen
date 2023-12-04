@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Blogs from "./components/Blogs";
 import User from "./components/User";
 import NewBlogForm from "./components/NewBlogForm";
+import Notification from "./components/Notification";
 import blogService from "./services/blogs";
 import login from "./services/login";
 
@@ -10,6 +11,11 @@ const App = () => {
   const [user, setUser] = useState(null);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showNotification, setShowNotification] = useState(true);
+  const [notification, setNotification] = useState({
+    message: "",
+    isError: false,
+  });
 
   useEffect(() => {
     blogService.getAll().then((blogs) => setBlogs(blogs));
@@ -26,6 +32,18 @@ const App = () => {
     }
   }, []);
 
+  const displayNotification = (message, isError) => {
+    setNotification({
+      message,
+      isError,
+    });
+    setShowNotification(true);
+    setTimeout(() => {
+      setNotification({ message: "", isError: false });
+      setShowNotification(false);
+    }, 4500);
+  };
+
   const handleLogin = async (event) => {
     event.preventDefault();
     try {
@@ -34,21 +52,26 @@ const App = () => {
         password,
       });
       setUser(user);
+      displayNotification(`successful login for ${user.username}`, false);
       blogService.setToken(user.token);
       window.localStorage.setItem("blogsAppUser", JSON.stringify(user));
     } catch (error) {
       console.error(error);
-      alert("could not login");
+      displayNotification(`failed logging in with provided credentials`, true);
     }
   };
 
   const handleLogout = () => {
+    displayNotification(`successful logout for ${user.username}`, false);
     setUser(null);
     window.localStorage.removeItem("blogsAppUser");
   };
 
   const handleBlogSubmit = async (data) => {
     const response = await blogService.create(data);
+    displayNotification(
+      `a new blog ${response.title} by ${response.author} was added`
+    );
     setBlogs((blogs) => blogs.concat(response));
   };
 
@@ -87,6 +110,12 @@ const App = () => {
 
   return (
     <div>
+      {showNotification && (
+        <Notification
+          isError={notification.isError}
+          message={notification.message}
+        />
+      )}
       {!user && loginForm()}
       {user && (
         <>
