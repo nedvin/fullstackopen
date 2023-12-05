@@ -20,7 +20,7 @@ const Blog = ({ blog, handleLikeUpdate, children }) => {
   const toggleShowAllInfo = () => setShowAllInfo((prev) => !prev);
 
   return (
-    <div style={blogStyle}>
+    <div style={blogStyle} className={"blogItem"}>
       {blog.title} {blog.author}{" "}
       {showAllInfo ? (
         <button onClick={toggleShowAllInfo}>hide</button>
