@@ -1,7 +1,13 @@
 import { useState } from "react";
+import PropTypes from "prop-types";
 
 const Blog = ({ blog, handleLikeUpdate, children }) => {
   const [showAllInfo, setShowAllInfo] = useState(false);
+
+  Blog.propTypes = {
+    blog: PropTypes.object.isRequired,
+    handleLikeUpdate: PropTypes.func.isRequired,
+  };
 
   const blogStyle = {
     paddingTop: 10,
