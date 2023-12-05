@@ -1,11 +1,17 @@
 import Blog from "./Blog";
 
-const Blogs = ({ blogs }) => {
+const Blogs = ({ blogs, handleLikeUpdate, canDeleteBlog, deleteBlog }) => {
   return (
     <>
-      {blogs.map((blog) => (
-        <Blog key={blog.id} blog={blog} />
-      ))}
+      {blogs
+        .sort((b1, b2) => b2.likes - b1.likes)
+        .map((blog) => (
+          <Blog key={blog.id} blog={blog} handleLikeUpdate={handleLikeUpdate}>
+            {canDeleteBlog(blog) && (
+              <button onClick={() => deleteBlog(blog.id)}>remove</button>
+            )}
+          </Blog>
+        ))}
     </>
   );
 };

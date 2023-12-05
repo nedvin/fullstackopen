@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Blogs from "./components/Blogs";
 import User from "./components/User";
 import NewBlogForm from "./components/NewBlogForm";
 import Notification from "./components/Notification";
+import Togglable from "./components/Togglable";
 import blogService from "./services/blogs";
 import login from "./services/login";
 
@@ -17,6 +18,7 @@ const App = () => {
     isError: false,
   });
 
+  const blogFormRef = useRef();
   useEffect(() => {
     blogService.getAll().then((blogs) => setBlogs(blogs));
   }, []);
@@ -67,12 +69,49 @@ const App = () => {
     window.localStorage.removeItem("blogsAppUser");
   };
 
-  const handleBlogSubmit = async (data) => {
-    const response = await blogService.create(data);
-    displayNotification(
-      `a new blog ${response.title} by ${response.author} was added`
+  const handleLikeUpdate = async (blogId) => {
+    const blogToUpdate = blogs.find((blog) => blog.id === blogId);
+    blogToUpdate.user = blogToUpdate.user.id;
+    blogToUpdate.likes = blogToUpdate.likes + 1;
+    const updatedBlog = await blogService.update(blogToUpdate);
+    setBlogs((blogs) =>
+      blogs.filter((blog) => blog.id !== blogId).concat(updatedBlog)
     );
-    setBlogs((blogs) => blogs.concat(response));
+  };
+
+  const handleBlogSubmit = async (data) => {
+    try {
+      const response = await blogService.create(data);
+
+      displayNotification(
+        `a new blog ${response.title} by ${response.author} was added`
+      );
+      blogFormRef.current.toggleVisibility();
+      setBlogs((blogs) =>
+        blogs.concat({
+          ...response,
+          user: { id: response.user, username: user.username },
+        })
+      );
+    } catch (error) {
+      displayNotification(
+        "could not create blog: all fields are required",
+        true
+      );
+    }
+  };
+
+  const canDeleteBlog = (blog) => {
+    return blog.user.username === user.username;
+  };
+
+  const deleteBlog = async (blogId) => {
+    const blog = blogs.find((blog) => blog.id === blogId);
+    if (!window.confirm(`delete ${blog.title} by ${blog.author}?`)) {
+      return;
+    }
+    await blogService.deleteBlog(blogId);
+    setBlogs((blogs) => blogs.filter((blog) => blog.id !== blogId));
   };
 
   const loginForm = () => {
@@ -121,8 +160,16 @@ const App = () => {
         <>
           <h2>blogs</h2>
           <User user={user} handleLogout={handleLogout} />
-          <NewBlogForm onSubmit={handleBlogSubmit} />
-          <Blogs user={user.name} blogs={blogs} />
+          <Togglable buttonLabel={"add new blog"} ref={blogFormRef}>
+            <NewBlogForm onSubmit={handleBlogSubmit} />
+          </Togglable>
+          <Blogs
+            user={user.name}
+            blogs={blogs}
+            handleLikeUpdate={handleLikeUpdate}
+            canDeleteBlog={canDeleteBlog}
+            deleteBlog={deleteBlog}
+          />
         </>
       )}
     </div>

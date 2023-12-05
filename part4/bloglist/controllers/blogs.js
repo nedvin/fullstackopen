@@ -1,6 +1,4 @@
 const blogsRouter = require("express").Router();
-const jwt = require("jsonwebtoken");
-const config = require("../utils/config");
 const { tokenExtractor, userExtractor } = require("../utils/middleware");
 const Blog = require("../models/blog");
 const User = require("../models/user");
@@ -69,12 +67,15 @@ blogsRouter.delete(
 
 blogsRouter.put("/:id", async (request, response) => {
   try {
+    const user = await User.findById(request.body.user);
+    const blogWithUser = { ...request.body, user: user.id };
+
     const updatedBlog = await Blog.findByIdAndUpdate(
       request.params.id,
-      request.body,
+      blogWithUser,
       { new: true }
     );
-    response.json(updatedBlog);
+    response.json(await updatedBlog.populate("user"));
   } catch (error) {
     response.status(400).json({ error: "malformed id" });
   }
