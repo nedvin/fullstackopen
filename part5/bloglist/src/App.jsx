@@ -120,6 +120,7 @@ const App = () => {
         <h2>log in to application</h2>
         <form
           onSubmit={handleLogin}
+          id="loginForm"
           style={{
             display: "flex",
             flexDirection: "column",
@@ -132,6 +133,7 @@ const App = () => {
             type="text"
             value={username}
             name="username"
+            id="login-username"
             onChange={({ target }) => setUsername(target.value)}
           />
           <label htmlFor="password">password</label>
@@ -139,9 +141,12 @@ const App = () => {
             type="password"
             value={password}
             name="password"
+            id="login-password"
             onChange={({ target }) => setPassword(target.value)}
           />
-          <button type="submit">Login</button>
+          <button type="submit" id="login-submit">
+            Login
+          </button>
         </form>
       </div>
     );
