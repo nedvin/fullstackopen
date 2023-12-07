@@ -3,7 +3,7 @@
     {
       "content": "If it hurts, do it more often",
       "id": "47145",
-      "votes": 0
+      "votes": 4
     },
     {
       "content": "Adding manpower to a late software project makes it later!",
@@ -23,7 +23,7 @@
     {
       "content": "Premature optimization is the root of all evil.",
       "id": "25170",
-      "votes": 0
+      "votes": 1
     },
     {
       "content": "Debugging is twice as hard as writing the code in the first place. Therefore, if you write the code as cleverly as possible, you are, by definition, not smart enough to debug it.",
@@ -37,13 +37,34 @@
     },
     {
       "content": "create bananas for world peace",
-      "votes": 0,
+      "votes": 1,
       "id": "DE5QZ1_"
     },
     {
       "content": "fikonmarmelad",
-      "votes": 0,
+      "votes": 1,
       "id": "UxgWm9D"
+    },
+    {
+      "content": "banan är gott",
+      "votes": 8,
+      "id": "MUzMUdY",
+      "vote": 1
+    },
+    {
+      "content": "hallå",
+      "votes": 12,
+      "id": "o4A0mgb"
+    },
+    {
+      "content": "päron med glass",
+      "votes": 1,
+      "id": "AckN98i"
+    },
+    {
+      "content": "halli",
+      "votes": 0,
+      "id": "1W3tCAJ"
     }
   ]
 }

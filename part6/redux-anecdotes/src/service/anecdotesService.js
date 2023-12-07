@@ -13,4 +13,12 @@ const create = async (anecdote) => {
   return response.data;
 };
 
-export default { getAll, create };
+const update = async (anecdote) => {
+  const response = await axios.put(
+    `http://localhost:3001/anecdotes/${anecdote.id}`,
+    anecdote
+  );
+  return response.data;
+};
+
+export default { getAll, create, update };
