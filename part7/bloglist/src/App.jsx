@@ -2,26 +2,29 @@ import { useState, useEffect, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 import { useSelector } from 'react-redux';
 import { showNotification } from './reducers/notificationReducer';
+import {
+  createBlog,
+  getAllBlogs,
+  likeBlog,
+  deleteBlogById,
+} from './reducers/blogReducer';
 import Blogs from './components/Blogs';
 import User from './components/User';
 import NewBlogForm from './components/NewBlogForm';
 import Notification from './components/Notification';
 import Togglable from './components/Togglable';
-import blogService from './services/blogs';
 import login from './services/login';
+import blogService from './services/blogs';
 
 const App = () => {
   const dispatch = useDispatch();
   const notification = useSelector((state) => state.notification);
-  const [blogs, setBlogs] = useState([]);
+  const blogs = useSelector((state) => state.blogs);
   const [user, setUser] = useState(null);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
   const blogFormRef = useRef();
-  useEffect(() => {
-    blogService.getAll().then((blogs) => setBlogs(blogs));
-  }, []);
 
   useEffect(() => {
     const user = window.localStorage.getItem('blogsAppUser');
@@ -33,6 +36,10 @@ const App = () => {
       blogService.setToken(newUser.token);
     }
   }, []);
+
+  useEffect(() => {
+    dispatch(getAllBlogs());
+  }, [dispatch]);
 
   const displayNotification = (message, isError) => {
     dispatch(showNotification(message, isError));
@@ -50,7 +57,6 @@ const App = () => {
       blogService.setToken(user.token);
       window.localStorage.setItem('blogsAppUser', JSON.stringify(user));
     } catch (error) {
-      console.error(error);
       displayNotification(`failed logging in with provided credentials`, true);
     }
   };
@@ -62,29 +68,16 @@ const App = () => {
   };
 
   const handleLikeUpdate = async (blogId) => {
-    const blogToUpdate = blogs.find((blog) => blog.id === blogId);
-    blogToUpdate.user = blogToUpdate.user.id;
-    blogToUpdate.likes = blogToUpdate.likes + 1;
-    const updatedBlog = await blogService.update(blogToUpdate);
-    setBlogs((blogs) =>
-      blogs.filter((blog) => blog.id !== blogId).concat(updatedBlog)
-    );
+    dispatch(likeBlog(blogId));
   };
 
   const handleBlogSubmit = async (data) => {
     try {
-      const response = await blogService.create(data);
-
       displayNotification(
-        `a new blog ${response.title} by ${response.author} was added`
+        `a new blog ${data.title} by ${data.author} was added`
       );
       blogFormRef.current.toggleVisibility();
-      setBlogs((blogs) =>
-        blogs.concat({
-          ...response,
-          user: { id: response.user, username: user.username },
-        })
-      );
+      dispatch(createBlog(data));
     } catch (error) {
       displayNotification(
         'could not create blog: all fields are required',
@@ -97,13 +90,12 @@ const App = () => {
     return blog.user.username === user.username;
   };
 
-  const deleteBlog = async (blogId) => {
+  const deleteBlog = (blogId) => {
     const blog = blogs.find((blog) => blog.id === blogId);
     if (!window.confirm(`delete ${blog.title} by ${blog.author}?`)) {
       return;
     }
-    await blogService.deleteBlog(blogId);
-    setBlogs((blogs) => blogs.filter((blog) => blog.id !== blogId));
+    dispatch(deleteBlogById(blogId));
   };
 
   const loginForm = () => {

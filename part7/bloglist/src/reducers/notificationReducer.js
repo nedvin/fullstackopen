@@ -19,7 +19,6 @@ const notificationSlice = createSlice({
 const { createNotification, removeNotification } = notificationSlice.actions;
 
 export const showNotification = (notificationMessage, isError) => {
-  console.log(notificationMessage);
   return async (dispatch) => {
     dispatch(createNotification({ message: notificationMessage, isError }));
     setTimeout(() => dispatch(removeNotification()), 5000);
