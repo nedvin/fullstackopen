@@ -13,29 +13,25 @@ import User from './components/User';
 import NewBlogForm from './components/NewBlogForm';
 import Notification from './components/Notification';
 import Togglable from './components/Togglable';
-import login from './services/login';
-import blogService from './services/blogs';
+import {
+  loadUserFromLocalStorage,
+  logInUser,
+  logOutUser,
+} from './reducers/userReducer';
 
 const App = () => {
   const dispatch = useDispatch();
   const notification = useSelector((state) => state.notification);
   const blogs = useSelector((state) => state.blogs);
-  const [user, setUser] = useState(null);
+  const user = useSelector((state) => state.user);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
   const blogFormRef = useRef();
 
   useEffect(() => {
-    const user = window.localStorage.getItem('blogsAppUser');
-    if (user === null) {
-      return;
-    } else {
-      const newUser = JSON.parse(user);
-      setUser(newUser);
-      blogService.setToken(newUser.token);
-    }
-  }, []);
+    dispatch(loadUserFromLocalStorage());
+  }, [dispatch]);
 
   useEffect(() => {
     dispatch(getAllBlogs());
@@ -48,14 +44,10 @@ const App = () => {
   const handleLogin = async (event) => {
     event.preventDefault();
     try {
-      const user = await login({
-        username,
-        password,
-      });
-      setUser(user);
-      displayNotification(`successful login for ${user.username}`, false);
-      blogService.setToken(user.token);
-      window.localStorage.setItem('blogsAppUser', JSON.stringify(user));
+      dispatch(logInUser(username, password));
+      displayNotification(`successful login for ${username}`, false);
+      setUsername('');
+      setPassword('');
     } catch (error) {
       displayNotification(`failed logging in with provided credentials`, true);
     }
@@ -63,8 +55,7 @@ const App = () => {
 
   const handleLogout = () => {
     displayNotification(`successful logout for ${user.username}`, false);
-    setUser(null);
-    window.localStorage.removeItem('blogsAppUser');
+    dispatch(logOutUser());
   };
 
   const handleLikeUpdate = async (blogId) => {

@@ -33,11 +33,17 @@ blogsRouter.post(
     const user = await User.findById(request.user);
     const blog = new Blog({ ...request.body, user: user._id });
 
-    const result = await blog.save();
-    user.blogs = user.blogs.concat(result._id);
+    const savedBlog = await blog.save();
+    user.blogs = user.blogs.concat(savedBlog._id);
     await user.save();
 
-    response.status(201).json(result);
+    const populatedBlog = await Blog.findById(savedBlog._id).populate("user", {
+      name: 1,
+      username: 1,
+      id: 1,
+    });
+
+    response.status(201).json(populatedBlog);
   }
 );
 
@@ -77,6 +83,7 @@ blogsRouter.put("/:id", async (request, response) => {
     );
     response.json(await updatedBlog.populate("user"));
   } catch (error) {
+    console.log(error);
     response.status(400).json({ error: "malformed id" });
   }
 });
