@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux';
 import { useSelector } from 'react-redux';
 import { showNotification } from './reducers/notificationReducer';
 import { createBlog, getAllBlogs } from './reducers/blogReducer';
-import Blogs from './components/Blogs';
+import BlogList from './components/BlogList';
 import Blog from './components/Blog';
 import LoggedInDetails from './components/LoggedInDetails';
 import NewBlogForm from './components/NewBlogForm';
@@ -17,11 +17,12 @@ import {
   logInUser,
   logOutUser,
 } from './reducers/userReducer';
+import Navigation from './components/Navigation';
 
 const App = () => {
+  const dispatch = useDispatch();
   const matchUsersId = useMatch('/users/:id');
   const matchBlogsId = useMatch('/blogs/:id');
-  const dispatch = useDispatch();
   const notification = useSelector((state) => state.notification);
   const blogs = useSelector((state) => state.blogs);
   const signedInUser = useSelector((state) => state.user);
@@ -134,13 +135,15 @@ const App = () => {
       {!signedInUser && loginForm()}
       {signedInUser && (
         <>
+          <Navigation>
+            <LoggedInDetails user={signedInUser} handleLogout={handleLogout} />
+          </Navigation>
           <h2>blogs</h2>
-          <LoggedInDetails user={signedInUser} handleLogout={handleLogout} />
           <Togglable buttonLabel={'add new blog'} ref={blogFormRef}>
             <NewBlogForm onSubmit={handleBlogSubmit} />
           </Togglable>
           <Routes>
-            <Route path="/" element={<Blogs blogs={blogs} />} />
+            <Route path="/" element={<BlogList blogs={blogs} />} />
             <Route
               path="/users/:id"
               element={<User selectedUser={selectedUser} />}

@@ -1,9 +1,11 @@
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { likeBlog, deleteBlogById } from '../reducers/blogReducer';
 
 const Blog = ({ blog }) => {
   const dispatch = useDispatch();
   const signedInUser = useSelector((state) => state.user);
+  const navigate = useNavigate();
 
   const handleLikeUpdate = async (blogId) => {
     dispatch(likeBlog(blogId));
@@ -18,6 +20,7 @@ const Blog = ({ blog }) => {
       return;
     }
     dispatch(deleteBlogById(blogId));
+    navigate('/');
   };
 
   return (

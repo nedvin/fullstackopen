@@ -1,10 +1,8 @@
 const LoggedInDetails = ({ user, handleLogout }) => {
   return (
-    <>
-      <p>
-        {user.name} logged in <button onClick={handleLogout}>log out</button>
-      </p>
-    </>
+    <span>
+      {user.name} logged in <button onClick={handleLogout}>log out</button>
+    </span>
   );
 };
 

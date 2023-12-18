@@ -1,6 +1,6 @@
 import BlogListItem from './BlogListItem';
 
-const Blogs = ({ blogs }) => {
+const BlogList = ({ blogs }) => {
   return (
     <>
       {[...blogs]
@@ -12,4 +12,4 @@ const Blogs = ({ blogs }) => {
   );
 };
 
-export default Blogs;
+export default BlogList;
