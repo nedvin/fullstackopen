@@ -1,16 +1,12 @@
-import Blog from './Blog';
+import BlogListItem from './BlogListItem';
 
-const Blogs = ({ blogs, handleLikeUpdate, canDeleteBlog, deleteBlog }) => {
+const Blogs = ({ blogs }) => {
   return (
     <>
       {[...blogs]
         .sort((b1, b2) => b2.likes - b1.likes)
         .map((blog) => (
-          <Blog key={blog.id} blog={blog} handleLikeUpdate={handleLikeUpdate}>
-            {canDeleteBlog(blog) && (
-              <button onClick={() => deleteBlog(blog.id)}>remove</button>
-            )}
-          </Blog>
+          <BlogListItem key={blog.id} blog={blog}></BlogListItem>
         ))}
     </>
   );

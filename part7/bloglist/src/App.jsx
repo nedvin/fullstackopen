@@ -1,18 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
+import { Routes, Route, useMatch } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { useSelector } from 'react-redux';
 import { showNotification } from './reducers/notificationReducer';
-import {
-  createBlog,
-  getAllBlogs,
-  likeBlog,
-  deleteBlogById,
-} from './reducers/blogReducer';
+import { createBlog, getAllBlogs } from './reducers/blogReducer';
 import Blogs from './components/Blogs';
-import User from './components/User';
+import Blog from './components/Blog';
+import LoggedInDetails from './components/LoggedInDetails';
 import NewBlogForm from './components/NewBlogForm';
 import Notification from './components/Notification';
 import Togglable from './components/Togglable';
+import Users from './components/Users';
+import User from './components/User';
 import {
   loadUserFromLocalStorage,
   logInUser,
@@ -20,10 +19,20 @@ import {
 } from './reducers/userReducer';
 
 const App = () => {
+  const matchUsersId = useMatch('/users/:id');
+  const matchBlogsId = useMatch('/blogs/:id');
   const dispatch = useDispatch();
   const notification = useSelector((state) => state.notification);
   const blogs = useSelector((state) => state.blogs);
-  const user = useSelector((state) => state.user);
+  const signedInUser = useSelector((state) => state.user);
+  const selectedUserId = matchUsersId ? matchUsersId.params.id : null;
+  const selectedUser = useSelector((state) =>
+    state.users.find((user) => user.id === selectedUserId)
+  );
+  const selectedBlogId = matchBlogsId ? matchBlogsId.params.id : null;
+  const selectedBlog = useSelector((state) =>
+    state.blogs.find((blog) => blog.id === selectedBlogId)
+  );
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
@@ -54,12 +63,11 @@ const App = () => {
   };
 
   const handleLogout = () => {
-    displayNotification(`successful logout for ${user.username}`, false);
+    displayNotification(
+      `successful logout for ${signedInUser.username}`,
+      false
+    );
     dispatch(logOutUser());
-  };
-
-  const handleLikeUpdate = async (blogId) => {
-    dispatch(likeBlog(blogId));
   };
 
   const handleBlogSubmit = async (data) => {
@@ -75,18 +83,6 @@ const App = () => {
         true
       );
     }
-  };
-
-  const canDeleteBlog = (blog) => {
-    return blog.user.username === user.username;
-  };
-
-  const deleteBlog = (blogId) => {
-    const blog = blogs.find((blog) => blog.id === blogId);
-    if (!window.confirm(`delete ${blog.title} by ${blog.author}?`)) {
-      return;
-    }
-    dispatch(deleteBlogById(blogId));
   };
 
   const loginForm = () => {
@@ -135,21 +131,23 @@ const App = () => {
           message={notification.message}
         />
       )}
-      {!user && loginForm()}
-      {user && (
+      {!signedInUser && loginForm()}
+      {signedInUser && (
         <>
           <h2>blogs</h2>
-          <User user={user} handleLogout={handleLogout} />
+          <LoggedInDetails user={signedInUser} handleLogout={handleLogout} />
           <Togglable buttonLabel={'add new blog'} ref={blogFormRef}>
             <NewBlogForm onSubmit={handleBlogSubmit} />
           </Togglable>
-          <Blogs
-            user={user.name}
-            blogs={blogs}
-            handleLikeUpdate={handleLikeUpdate}
-            canDeleteBlog={canDeleteBlog}
-            deleteBlog={deleteBlog}
-          />
+          <Routes>
+            <Route path="/" element={<Blogs blogs={blogs} />} />
+            <Route
+              path="/users/:id"
+              element={<User selectedUser={selectedUser} />}
+            />
+            <Route path="/users" element={<Users />} />
+            <Route path="blogs/:id" element={<Blog blog={selectedBlog} />} />
+          </Routes>
         </>
       )}
     </div>

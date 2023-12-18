@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import Blog from '../src/components/Blog';
+import BlogListItem from '../src/components/BlogListItem';
 
 const blog = {
   title: 'You are not gonna need it',
@@ -19,7 +19,7 @@ const blog = {
 describe('<Blog/>', () => {
   test('renders title and author by default', () => {
     const { container } = render(
-      <Blog blog={blog} handleLikeUpdate={() => {}} />
+      <BlogListItem blog={blog} handleLikeUpdate={() => {}} />
     );
 
     const div = container.querySelector('.blogItem');
@@ -32,7 +32,7 @@ describe('<Blog/>', () => {
 
   test('shows url and likes when show-button is clicked', async () => {
     const { container } = render(
-      <Blog blog={blog} handleLikeUpdate={() => {}} />
+      <BlogListItem blog={blog} handleLikeUpdate={() => {}} />
     );
 
     const div = container.querySelector('.blogItem');
@@ -48,7 +48,7 @@ describe('<Blog/>', () => {
   test('every click on like button is registered', async () => {
     const mockHandler = jest.fn();
 
-    render(<Blog blog={blog} handleLikeUpdate={mockHandler} />);
+    render(<BlogListItem blog={blog} handleLikeUpdate={mockHandler} />);
 
     const user = userEvent.setup();
     const showButton = screen.getByText('view');

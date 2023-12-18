@@ -1,9 +1,17 @@
-const User = ({ user, handleLogout }) => {
+const User = ({ selectedUser }) => {
+  if (!selectedUser) {
+    return null;
+  }
+
   return (
     <>
-      <p>
-        {user.name} logged in <button onClick={handleLogout}>log out</button>
-      </p>
+      <h2>{selectedUser.name}</h2>
+      <h3>added blogs</h3>
+      <ul>
+        {selectedUser.blogs.map((blog) => (
+          <li key={blog.id}>{blog.title}</li>
+        ))}
+      </ul>
     </>
   );
 };

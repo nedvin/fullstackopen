@@ -1,43 +1,37 @@
-import { useState } from 'react';
-import PropTypes from 'prop-types';
+import { useDispatch, useSelector } from 'react-redux';
+import { likeBlog, deleteBlogById } from '../reducers/blogReducer';
 
-const Blog = ({ blog, handleLikeUpdate, children }) => {
-  const [showAllInfo, setShowAllInfo] = useState(false);
+const Blog = ({ blog }) => {
+  const dispatch = useDispatch();
+  const signedInUser = useSelector((state) => state.user);
 
-  Blog.propTypes = {
-    blog: PropTypes.object.isRequired,
-    handleLikeUpdate: PropTypes.func.isRequired,
+  const handleLikeUpdate = async (blogId) => {
+    dispatch(likeBlog(blogId));
   };
 
-  const blogStyle = {
-    paddingTop: 10,
-    paddingLeft: 2,
-    border: 'solid',
-    borderWidth: 1,
-    marginBottom: 5,
+  const canDeleteBlog = () => {
+    return blog.user.username === signedInUser.username;
   };
 
-  const toggleShowAllInfo = () => setShowAllInfo((prev) => !prev);
+  const deleteBlog = (blogId) => {
+    if (!window.confirm(`delete ${blog.title} by ${blog.author}?`)) {
+      return;
+    }
+    dispatch(deleteBlogById(blogId));
+  };
 
   return (
-    <div style={blogStyle} className={'blogItem'}>
-      {blog.title} {blog.author}{' '}
-      {showAllInfo ? (
-        <button onClick={toggleShowAllInfo}>hide</button>
-      ) : (
-        <button onClick={toggleShowAllInfo}>view</button>
-      )}
-      {showAllInfo && (
-        <div>
-          {blog.url}
-          <br />
-          {blog.likes}{' '}
-          <button onClick={() => handleLikeUpdate(blog.id)}>like</button>
-          <br />
-          {blog.user.username} <br />
-          {children}
-        </div>
-      )}
+    <div>
+      <h2>{blog.title}</h2>
+      <a href={blog.info}>{blog.info}</a>
+      <br />
+      {blog.likes} likes{' '}
+      <button onClick={() => handleLikeUpdate(blog.id)}>like</button>
+      <br />
+      added by {blog.user.name}
+      {canDeleteBlog() ? (
+        <button onClick={() => deleteBlog(blog.id)}>remove</button>
+      ) : null}
     </div>
   );
 };
